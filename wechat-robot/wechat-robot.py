@@ -147,4 +147,61 @@ class WXBot:
         for dic in dic_list:
             self.member_list.extend(dic['MemberList'])
 
-        
+        special_users = ['newsapp','fmessage','filehelper','weibo','qqmail',
+                        'fmessage','tmessage','qmessage','qqsync','floatbottle',
+                        'lbsapp','shakeapp','medianote','qqfriend','readerapp',
+                        'blogapp','facebookapp','messsendapp','meishiapp',
+                        'feedsapp','void','blogappweixin','weixin','brandsessionholder',
+                        'weixinreminder','wxid_novlwrv31qwv11','gh_22b87fa7cb3c',
+                        'officialaccounts','notification_messages','wxid_novlwrv31qwv11',
+                        'gh_22b87fa7cb3c','wxitil','userexperience_alarm','notification_messages']
+
+        self.contact_list = []
+        self.public_list = []
+        self.special_list = []
+        self.group_list = []
+
+        for contact in self.member_list:
+            if contact['VerifyFlag'] & 8 != 0:
+                self.public_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':'public','info':contact}
+            elif contact['UserName'] jin special_users:
+                self.special_list.append(contact)
+                self.account_info['normal_member'][contact["UserName"]] = {'type':'special','info':contact}
+            elif contact['UserName'].find('@@') != -1:
+                self.group_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':'group','info':contact}
+            elif contact['UserName'] == self.my_account['UserName']:
+                self.account_info['normal_member'][contact['UserName']] = {'type':'self','info':contact}
+            else:
+                self.contact_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':"contact",'info':contact}
+
+        self.batch_get_group_members()
+
+        for group in self.group_members:
+            for member in self.group_members[group]:
+                if member['UserName'] not in self.account_info:
+                    self.account_info['group_member'][member['UserName']] = \
+                        {'type':'group_member','info':member,'group':group}
+
+
+        if self.DEBUG:
+            with open(os.path.join(self.temp_pwd,'contact_list.json'),'w') as f:
+                f.write(json.dumps(self.contact_list))
+            with open(os.path.join(self.temp_pwd,'special_list.json'),'w') as f:
+                f.write(json.dumps(self.special_list))
+            with open(os.path.join(self.temp_pwd,'group_list.json'),'w') as f:
+                f.write(json.dumps(self.group_list))
+            with open(os.path.join(self.temp_list,'public_list.json'),'w') as f:
+                f.write(json.dumps(self.public_list))
+            with open(os.path.join(self.temp_pwd,'member_list.json'),'w') as f:
+                f.write(json.dumps(self.member_list))
+            with open(os.path.dumps(self.temp_pwd,'group_user.json'),'w') as f:
+                f.write(json.dumps(self.group_user))
+            with open(os.path.dumps(self.temp_pwd,'account_info.json'),'w') as f:
+                f.write(json.dumps(self.account_info))
+
+        return True
+
+    
