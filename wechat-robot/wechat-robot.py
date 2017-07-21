@@ -71,7 +71,7 @@ class WXBot:
         self.batch_count = 50
         self.full_user_name_list = []
         self.wxid_list = []
-        self.cursof = 0
+        self.cursor = 0
         self.is_big_contact = False
 
         self.temp_pwd = os.path.join(os,getcwd(),'temp')
@@ -115,7 +115,7 @@ class WXBot:
         else:
             raise Exception('Unknown Type')
 
-    def geet_contact(self):
+    def get_contact(self):
 
         dic_list = []
         url = self.base_uri + '/webwxgetcontact?seq=0&pass_ticket=%s&skey=%s&r=%s' \
@@ -151,7 +151,7 @@ class WXBot:
                         'fmessage','tmessage','qmessage','qqsync','floatbottle',
                         'lbsapp','shakeapp','medianote','qqfriend','readerapp',
                         'blogapp','facebookapp','messsendapp','meishiapp',
-                        'feedsapp','void','blogappweixin','weixin','brandsessionholder',
+                        'feedsapp','voip','blogappweixin','weixin','brandsessionholder',
                         'weixinreminder','wxid_novlwrv31qwv11','gh_22b87fa7cb3c',
                         'officialaccounts','notification_messages','wxid_novlwrv31qwv11',
                         'gh_22b87fa7cb3c','wxitil','userexperience_alarm','notification_messages']
@@ -197,11 +197,87 @@ class WXBot:
                 f.write(json.dumps(self.public_list))
             with open(os.path.join(self.temp_pwd,'member_list.json'),'w') as f:
                 f.write(json.dumps(self.member_list))
-            with open(os.path.dumps(self.temp_pwd,'group_user.json'),'w') as f:
+            with open(os.path.dumps(self.temp_pwd,'group_users.json'),'w') as f:
                 f.write(json.dumps(self.group_user))
             with open(os.path.dumps(self.temp_pwd,'account_info.json'),'w') as f:
                 f.write(json.dumps(self.account_info))
 
+        return True
+
+    def get_big_contact(self):
+        total_len = len(self.full_user_name_list)
+        user_info_list = []
+
+        while self.cursor < total_len:
+            cur_batch = self.full_user_name_list[self.cursor:(self.cursor+self.batch_count)]
+            self.cursor += self.batch_count
+            cur_batch - map(map_username_batch,cur_batch)
+            user_info_list += self.batch_get_contact(cur_batch)
+            print "[INFO] Get batch contacts"
+
+        self.member_list = user_info_list
+        special_users = ['newsapp','filehelper','weibo','qqmail',
+                    'fmessage','tmessage','qmessage','qqsync','floatbottle',
+                    'lbsapp','shakeapp','medianote','qqfriend','readerapp',
+                    'blogapp','facebookapp','messsendapp','meishiapp',
+                    'feedsapp','voip','blogappweixin','weixin','brandsessionholder',
+                    'weixinreminder','wxid_novlwrv31qwv11','officialaccounts',
+                    'gh_22b87fa7cb3c','wxitil','userexperience_alarm','notification_messages','notifymessage']
+
+        self.contact_list = []
+        self.public_list = []
+        self.special_list = []
+        self.group_list = []
+
+        for i ,contact in enumerate(self.membser_list):
+            if contact['VerifyFlag'] & 8 !=0:
+                self.public_list.append(contact)
+                self.account_info['normal_member'][contact[UserName]] = {'type':'public','info':contact}
+            elif contact['UserName'] in special_users or self.wxid_list[i] in special_users:
+                self.special_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':'special','info':contact}
+            elif contact['UserName'].find('@@') != -1:
+                self.group_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':'group','info':contact}
+            elif contact['UserName'] == self.my_account['UserName']:
+                self.account_info['normal_member'][contact['UserName']] = {'type':'self','info':contact}
+            else:
+                self.contact_list.append(contact)
+                self.account_info['normal_member'][contact['UserName']] = {'type':'contact','info':contact}
+        group_members = {}
+        encry_chat_room_id = {}
+
+        for group in self.group_members:
+            gid = group['UserName']
+            members = group['MemberList']
+            group_members[gid] = members
+            encry_chat_room_id[gid] = group['EncryChatRoomId']
+        self.group_members = group_members
+        self.encry_chat_room_id_list = encry_chat_room_id
+
+        for group in self.group_members:
+            for member in self.group_members[group]:
+                if member['UserName'] not in self.account_info:
+                    self.account_info['group_members'][member['UserName']] = \
+                        {'type':'group_member','info':member,'group':group}
+
+        if self.DEBUG:
+            with open(os.path.join(self.temp_pwd,'contact_list.json'),'w') as f:
+                f.write(json.dumps(self.contact_list))
+            with open(os.path.join(self.temp_pwd,'special_list.json'),'w') as f:
+                f.write(json.dumps(self.special_list))
+            with open(os.path.join(self.temp_pwd,'group_list.json'),'w') as f:
+                f.write(json.dumps(self.group_list))
+            with open(os.path.join(self.temp_pwd,'public_list.json'),'w') as f:
+                f.write(json.dumps(self.public_list))
+            with open(os.path.join(self.temp_pwd,'member_list.json'),'w') as f:
+                f.write(json.dumps(self.member_list))
+            with open(os.path.join(self.temp_pwd,'group_users.json'),'w') as f:
+                f.write(json.dumps(self.group_members))
+            with open(os.path.join(self.temp_pwd,'account_info.json'),'w') as f:
+                f.write(json.dumps(self.account_info))
+        print '[INFO] Get %d contacts' % len(self.contact_list)
+        print '[INFO] Start to process messages.'
         return True
 
     
