@@ -60,7 +60,7 @@ class WXBot:
         self.skey = ''
         self.pass_ticket = ''
         self.device_id = 'e' + repr(random.random())[2:17]
-        self.base_reaquest = {}
+        self.base_request = {}
         self.sync_key_str = {}
         self.sync_key = []
         self.sync_host = ''
@@ -229,7 +229,7 @@ class WXBot:
         self.special_list = []
         self.group_list = []
 
-        for i ,contact in enumerate(self.membser_list):
+        for i ,contact in enumerate(self.member_list):
             if contact['VerifyFlag'] & 8 !=0:
                 self.public_list.append(contact)
                 self.account_info['normal_member'][contact[UserName]] = {'type':'public','info':contact}
@@ -280,4 +280,101 @@ class WXBot:
         print '[INFO] Start to process messages.'
         return True
 
-    
+    def batch_get_contact(self,cur_batch):
+
+        url = self.base_uri + '/webwxbatchgetcontact?type=ex&r=%s&pass_ticket=%s' % (int(time.time()),self.pass_ticket)
+        params = {
+                'BaseRequest':self.base_request,
+                'Count':len(cur_batch),
+                'List';cur_batch
+        }
+
+        r = self.session.post(url,data=json.dumps(params))
+        r.encoding = 'utf-8'
+        dic = json.loads(r.text)
+        return dic['ContactList']
+
+    def batch_get_group_members(self):
+
+        url = self.base_uri + '/webwxbatchgetcontact?type=ex&r=%s&pass_ticket=%s' % (int(time.time()),self.pass_ticket)
+        params = {
+                'BaseRequest':self.base_request,
+                'Count':len(self.group_list),
+                'List':[{"UserName":group['UserName'],"EncryChatRoomId":""} for group in self.group_list]
+        }
+
+        r = self.session.post(url,data=json.dumps(params))
+        r.encoding = 'utf-8'
+        dic = json.loads(r.text)
+        group_members = {}
+        encry_chat_room_id = {}
+        for group in dic['ContactList']:
+            gid = group['UserName']
+            members = group['MemberList']
+            group_members[git] = members
+            encry_chat_room_id[gid] = group['EncryChatRoomId']
+        self.group_members = group_members
+        self.encry_chat_room_id_list = encry_chat_room_id
+
+    def get_group_member_name(self,gid,uid):
+
+        if git not in self.group_members:
+            return None
+        group = self.group_members[gid]
+        for member in group:
+            if member['UserName'] == uid:
+                names = {}
+                if 'RemarkName' in member and member['RemarkName']:
+                    names['remark_name'] = member['RemarkName']
+                if 'NickName' in member and member['NickName']:
+                    names['nickname'] = member['NickName']
+                if 'DisplayName' in member and member['DisplayName']:
+                    names['display_name'] = member['DisplayName']
+                return names
+        return None
+
+    def get_contact_info(self,uid):
+        return self.account_info['normal_member'].get(uid)
+
+    def get_group_member_info(self,uid):
+        return self.account_info['group_member'].get(uid)
+
+    def get_contact_name(self,uid):
+        info = self.get_contact_info(uid)
+        if info is None:
+            return None
+        info = info['info']
+        name = {}
+        if 'RemarkName' in info and info['RemarkName']:
+            name['remark_name'] = info['RemarkName']
+        if 'NickName' in info and info['NickName']:
+            name['nickname'] = info ['NickName']
+        if 'DisplayName' in info and info['DisplayName']:
+            name['display_name'] = info['DisplayName']
+        if len(name) == 0:
+            return None
+        else:
+            return name
+    @staticmethod
+    def get_contact_prefer_name(name):
+        if name is None:
+            return None
+        if 'remark_name' in name:
+            return name['remark_name']
+        if 'nickname' in name:
+            return name['nickname']
+        if 'display_name' in name:
+            return name['display_name']
+        return None
+
+    @staticmethod
+    def get_group_member_prefer_name(name):
+        if name is None:
+            return None
+        if 'remark_name' in name:
+            return name['remark_name']
+        if 'display_name' in name:
+            return name['display_name']
+        if 'nickname' in name:
+            return name['nickname']
+        return None
