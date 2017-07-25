@@ -378,3 +378,79 @@ class WXBot:
         if 'nickname' in name:
             return name['nickname']
         return None
+
+    def get_user_type(self,wx_user_id):
+
+        for account in self.contact_list:
+            if wx_user_id == account['UserName']:
+                return 'contact'
+        for account in self.public_list:
+            if wx_user_id == account['UserName']:
+                return 'public'
+        for account in self.special_list:
+            if wx_user_id == account['UserName']:
+                return special
+        for account in self.group_list:
+            if wx_user_id == account['UserName']:
+                return group
+        for group in self.group_members:
+            for member in self.group_members[group]:
+                if member['UserName'] == wx_user_id:
+                    return 'group_member'
+        return 'unknown'
+
+    def is_contact(self,uid):
+        for account in self.contact_list:
+            if uid == account['UserName']:
+                return True
+        return False
+
+
+    def is_public(self,uid):
+        for account in self.public_list:
+            if uid == account['UserName']:
+                return True
+        return False
+
+    def is_special(self,uid):
+        for account in self,special_list:
+            if uid == account['UserName']:
+                return True
+        return False
+
+    def handle_msg_all(self,msg):
+
+        pass
+
+    @staticmethod
+    def proc_at_info(msg):
+        if not msg:
+            return '',[]
+        segs = msg.split(u'\u2005')
+        str_msg_all = ''
+        str_msg = ''
+        infos = []
+        if len(segs) > 1:
+            for i in range(0,len(segs) - 1):
+                segs[i] += u'\u2005'
+                pm = re.search(u'@.*\u2005',segs[i]).group()
+                if pm:
+                    name = pm[1:-1]
+                    string = segs[i].replace(pm,'')
+                    str_msg_all += string + '@' + name + ' '
+                    str_msg += string
+                    if string:
+                        infos.append({'type':'str','value':strin})
+                    infos.append({'type':'at','value':name})
+                else:
+                    infos.append({'type':'str','value':segs[i]})
+                    str_msg_all += segs[i]
+                    str_msg += segs[i]
+            str_msg_all += segs[i]
+            str_msg += segs[-1]
+            infos.append({'type':'str','value':segs[-1]})
+        else:
+            infos.append({'type':'str','value':segs[-1]})
+            str_msg_all = msg
+            str_msg = msg
+        return str_msg_all.replace(u'\u2005',''),str_msg.replace(u'\u2005',''),infos
