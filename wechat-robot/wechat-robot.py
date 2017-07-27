@@ -454,3 +454,68 @@ class WXBot:
             str_msg_all = msg
             str_msg = msg
         return str_msg_all.replace(u'\u2005',''),str_msg.replace(u'\u2005',''),infos
+    def extract_msg_content(self,msg_type_id,msg):
+
+        mtype = msg['MsgType']
+        content = HTMLParser.HTMLParser().unescape(msg['Content'])
+        msg_id = msg['MsgId']
+
+        msg_content = {}
+        if msg_type_id == 0:
+            return {'type':11,'data':''}
+        elif msg_type_id == 2:
+            return {'type':0,'data':content.replace('<br/>','\n')}
+        elif msg_type_id == 3:
+            sp = content.find('<br/>')
+            uid = content[:sp]
+            content = content[sp:]
+            content = content.replace('<br/>','')
+            uid = uid[:-1]
+            name = self.get_contact_prefer_name(self.get_contact_name[uid])
+            if not name:
+                name = self.get_group_member_prefer_name(self.get_group_member_name(msg['FromUserName'],uid))
+            if not name:
+                name = 'unknown'
+            msg_content['user'] = {'id':uid,'name':name}
+        else:
+            pass
+
+        msg_prefix = (msg_content['user']['name'] + ':') if 'user' in msg_content else ''
+
+        if mtype == 1:
+            if content.find('http://weixin.qq.com/cgi-bin/redirectforward?args=') != 1:
+                r = self.session.get(content)
+                r.encoding = 'gbk'
+                data = r.text
+                pos = self.search_content('title',data,'xml')
+                msg_content['type'] = 1
+                msg_content['data'] = pos
+                msg_content['detail'] = data
+                if self.DEBUG:
+                    print '     %s[Location] %s' % (msg_prefix,pos)
+            else:
+                msg_content['type'] = 0
+                if msg_type_id == 3 or (msg_type_id == 1 and msg['ToUserName'][:2] == '@@'):
+                    msg_infos = self.proc_at_info(content)
+                    str_msg_all = msg_infos[0]
+                    str_msg = msg_infos[1]
+                    detail = msg_infos[2]
+                    msg_content['data'] = str_msg_all
+                    msg_content['detail'] = detail
+                    msg_content['desc'] = str_msg
+                else:
+                    msg_content['data'] = content
+
+                if slef.DEBUG:
+                    try:
+                        print '    %s[Text] %s' % (msg_prefix,msg_content['data'])
+                    except UnicodeEncodeError:
+                        print '    %s[Text] (illega text).' % msg_prefix
+        elif mtype == 3:
+            msg_content['type'] = 3
+            msg_content['data'] self.get_msg_img_url(msg_id)
+            msg_content['img'] self.session.get(msg_content['data'].content.encode('hex'))
+            if self.DEBUG:
+                image = self.get_msg_img(msg_id)
+                print '    %s[Image] %s' % (msg_prefix,image)
+        
