@@ -518,4 +518,16 @@ class WXBot:
             if self.DEBUG:
                 image = self.get_msg_img(msg_id)
                 print '    %s[Image] %s' % (msg_prefix,image)
-        
+        elif mtype == 34:
+            msg_content['type'] = 4
+            msg_content['data'] = self.get_voice_url(msg_id)
+            msg_content['voice'] = self.session.get(msg_content['data']).content.encode('hex')
+            if self.DEBUG:
+                voice = self.get_voice(msg_id)
+                print '    %s[Voice] %s' % (msg_prefix,voice)
+        elif mtype = 37:
+            msg_content['type'] = 37
+            msg_content['data'] = msg['RecommendInfo']
+            if self.DEBUG:
+                print '    %s[useradd] %s' % (msg_prefix,msg['RecommendInfo']['NickName'])
+            
