@@ -165,7 +165,7 @@ class WXBot:
             if contact['VerifyFlag'] & 8 != 0:
                 self.public_list.append(contact)
                 self.account_info['normal_member'][contact['UserName']] = {'type':'public','info':contact}
-            elif contact['UserName'] jin special_users:
+            elif contact['UserName'] in special_users:
                 self.special_list.append(contact)
                 self.account_info['normal_member'][contact["UserName"]] = {'type':'special','info':contact}
             elif contact['UserName'].find('@@') != -1:
@@ -286,7 +286,7 @@ class WXBot:
         params = {
                 'BaseRequest':self.base_request,
                 'Count':len(cur_batch),
-                'List';cur_batch
+                'List':cur_batch
         }
 
         r = self.session.post(url,data=json.dumps(params))
@@ -513,8 +513,8 @@ class WXBot:
                         print '    %s[Text] (illega text).' % msg_prefix
         elif mtype == 3:
             msg_content['type'] = 3
-            msg_content['data'] self.get_msg_img_url(msg_id)
-            msg_content['img'] self.session.get(msg_content['data'].content.encode('hex'))
+            msg_content['data'] = self.get_msg_img_url(msg_id)
+            msg_content['img'] = self.session.get(msg_content['data'].content.encode('hex'))
             if self.DEBUG:
                 image = self.get_msg_img(msg_id)
                 print '    %s[Image] %s' % (msg_prefix,image)
@@ -525,7 +525,7 @@ class WXBot:
             if self.DEBUG:
                 voice = self.get_voice(msg_id)
                 print '    %s[Voice] %s' % (msg_prefix,voice)
-        elif mtype = 37:
+        elif mtype == 37:
             msg_content['type'] = 37
             msg_content['data'] = msg['RecommendInfo']
             if self.DEBUG:
