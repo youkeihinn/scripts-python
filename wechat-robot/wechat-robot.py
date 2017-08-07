@@ -530,4 +530,82 @@ class WXBot:
             msg_content['data'] = msg['RecommendInfo']
             if self.DEBUG:
                 print '    %s[useradd] %s' % (msg_prefix,msg['RecommendInfo']['NickName'])
-            
+        elif mtype == 42:
+            msg_content['type'] = 5
+            info = msg['RecommendInfo']
+            msg_content['data'] = {'nickname':info['NickName'],
+                                    'alias':info['Alias'],
+                                    'province':info['Province'],
+                                    'city':info['City'],
+                                    'gender':['unknown','male','female'][info['Sex']]}
+            if self.DEBUG:
+                print '    %s[RecommendInfo]' % msg_prefix
+                print '    --------------------------------'
+                print '    | NickName:%s' % info['NickName']
+                print '    | Alias:%s' % info['Alias']
+                print '    | Local:%s %s' % (info['Province'],info['City'])
+                print '    | Gender:%s' % ['unknown','male','female'][info['Sex']]
+                print '    ---------------------------------'
+        elif mtype == 47:
+            msg_content['type'] = 6
+            msg_content['data'] = self.search_content('cdnurl',content)
+            if self.DEBUG:
+                print '    %s[Animation] %s' % (msg_prefix,msg_content['data'])
+        elif mtype == 49:
+            msg_content['type'] = 7
+            if msg['AppMsgType'] == 3:
+                app_msg_type = 'music'
+            elif msg['AppMsgType'] == 5:
+                app_msg_type = 'link'
+            elif msg['AppMsgType'] == 7:
+                app_msg_type = 'weibo'
+            else:
+                app_msg_type = 'unknown'
+            msg_content['data'] = {'type':app_msg_type,
+                                    'title':msg['FileName'],
+                                    'desc':self.search_content('des',content,'xml'),
+                                    'url':msg['Url'],
+                                    'from':self.search_content('appname',content,'xml'),
+                                    'content':msg.get('Content')
+                                    }
+
+            if self.DEBUG:
+                print '    %s[Share]%s' % (msg_prefix,app_msg_type)
+                print '    --------------------------'
+                print '    | title:%s' % msg['FileName']
+                print '    | desc:%s' % self.search_content('des',content,'xml')
+                print '    | link:%s' % msg['Url']
+                print '    | from:%s' % self.search_content('appname',content,'xml')
+                print '    | content:%s' % (msg.get('content')[:20] if msg.get('content') else "unknown")
+                print '    ---------------------------'
+        elif mtype == 62:
+            msg_content['type'] = 8
+            msg_content['data'] = content
+            if self.DEBUG:
+                print '    %s[Video] Please check on mobiles' % msg_prefix
+        elif mtype == 53:
+            msg_content['type'] = 9
+            msg_content['date'] = content
+            if self.DEBUG:
+                print '    %s[Video Call]' % msg_prefix
+        elif mtype == 10002:
+            msg_content['type'] = 10
+            msg_content['date'] = content
+            if self.DEBUG:
+                print '    %s[Redraw]' % msg_prefix
+        elif mtype == 10000:
+            msg_content['type'] = 12
+            msg_content['data'] = msg['Content']
+            if self.DEBUG:
+                print '    [Unknown]'
+        elif mtype == 43:
+            msg_content['type'] = 13
+            msg_content['data'] self.get_video_url(msg_id)
+            if self.DEBUG:
+                print '    %s[videl]%s' % (msg_prefix,msg_content['data'])
+        else:
+            msg_content['type'] = 99
+            msg_content['data'] content
+            if self.DEBUG:
+                print '    %s[Unknown]' % msg_prefix
+        return msg_content
