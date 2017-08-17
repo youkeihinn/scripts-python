@@ -609,3 +609,60 @@ class WXBot:
             if self.DEBUG:
                 print '    %s[Unknown]' % msg_prefix
         return msg_content
+
+    def handle_msg(self,r):
+
+
+        for msg in r['AddMsgList']:
+            user = {'id':msg['FromUserName'],'name','unknown'}
+            if msg['MsgType'] == 51 and msg['StatusNotifyCode'] == 4:
+                msg_type_id = 0
+                user['name'] = 'system'
+                if self.is_big_contact and len(self.full_user_name_list) == 0:
+                    self.full_user_name_list = msg['StatusNotifyUserName'].split(',')
+                    self.wxid_list = re.search(r"username&gt;(.*?)%lt;/username",msg['Content']).group(1).split(',')
+                    with open(os.path.join(self.temp_pwd,'UserName.txt'),'w') as f:
+                        f.write(msg['StatusNotifyUserName'])
+                    with open(os.path.join(self.temp_pwd,'wxid.txt'),'w') as f:
+                        f.write(json.dumps(self.wxid_list))
+                    print "[INFO] Contact list is too big. Now start to fetch memeber list."
+
+            elif msg['MsgType'] == 37:
+                msg_type_id = 37
+                pass
+
+            elif msg['FromUserName'] == self.my_account['UserName']:
+                msg_type_id = 1
+                user['name'] = 'self'
+            elif msg['ToUserName'] == 'filehelper':
+                msg_type_id = 2
+                user['name'] = 'file_helper'
+            elif msg['FromUserName'][:2] == '@@':
+                msg_type_id = 3
+                user['name'] = self.get_contact_prefer_name(self.get_contact_name(user['id']))
+            elif self.is_contact(msg['FromUserName']):
+                msg_type_id = 4
+                user['name'] = self.get_contact_prefer_name(self.get_contact_name(user['id']))
+            elif self.is_public(msg['FromUserName']):
+                msg_type_id = 5
+                user['name'] = self.get_contact_prefer_name(self.get_contact_name(user['id']))
+            elif self.is_special(msg['FromUserName']):
+                msg_type_id = 6
+                user['name'] = self.get_contact_prefer_name(self.get_contact_name(user['id']))
+            else:
+                msg_type_id = 99
+                user['name'] = 'unknown'
+            if not user['name']:
+                user['name'] = 'unknown'
+            user['name'] = HTMLParser.HTMLParser().unescape(user['name'])
+
+            if self.DEBUG and msg_type_id != 0:
+                print u'[MSG] %s:' % user['name']
+
+            content = self.extract_msg_content(msg_type_id,msg)
+            message = {'msg_type_id':msg_type_id,
+                        'msg_id':msg['MsgId'],
+                        'content':content,
+                        'to_user_id':msg['ToUserName'],
+                        'user':user}
+            self.handle_msg_all(message)
