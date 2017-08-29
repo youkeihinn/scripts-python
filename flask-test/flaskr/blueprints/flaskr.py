@@ -4,11 +4,6 @@ from sqlite3 import dbapi2 as sqlite3
 from flask import Blueprint,Flask,request,session,g,redirect,url_for,abort,\
                     render_template,flash,current_app
 
-DATABASE = '/tmp/flaskr.db'
-DEBUG = True
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
 
 bp = Blueprint('flaskr',__name__)
 
