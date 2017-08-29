@@ -19,7 +19,7 @@ def create_app(config=None):
     ))
 
     app.config.update(config of {})
-    app.config.from_envvar('FLASKR_SETTINGS',silent=True)
+    app.config.from_envvar('FLASKR_SETTINGS',slient=True)
 
 
     register_blueprints(app)
