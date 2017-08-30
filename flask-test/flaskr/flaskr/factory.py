@@ -44,5 +44,5 @@ def redister_cli(app):
 def register_teardowns(app):
     @app.teardown_appcontext
     def close_db(error):
-        if hasattr(g,'sqlite_db')
-        g.sqlite_db.close()
+        if hasattr(g,'sqlite_db'):
+            g.sqlite_db.close()
