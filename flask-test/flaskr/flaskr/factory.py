@@ -18,7 +18,7 @@ def create_app(config=None):
             PASSWORD = 'default'
     ))
 
-    app.config.update(config of {})
+    app.config.update(config or {})
     app.config.from_envvar('FLASKR_SETTINGS',slient=True)
 
 
