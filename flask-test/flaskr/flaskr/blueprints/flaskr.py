@@ -50,8 +50,8 @@ def login():
         else:
             session['logged_in'] = True
             flash('You were logged in')
-            return redirect(url_for['flaskr.show_entries'])
-    return render_template['login.html',error=error]
+            return redirect(url_for('flaskr.show_entries'))
+    return render_template('login.html',error=error)
 
 @bp.route('/logout')
 def logout():
