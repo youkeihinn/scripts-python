@@ -6,7 +6,7 @@ import re,time
 def cdn_log(file_path):
     global count
     log = open(file_path,'r')
-    C = r'\.'.join([r'\d'{1,3}*4])
+    C = r'\.'.join([r'\d{1,3}']*4)
     find = re.compile(C)
     count = {}
 
